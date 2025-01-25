@@ -4,11 +4,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <DFRobotDFPlayerMini.h>
 
-#define LED_PIN 5
-#define BUTTON1_PIN 6
-#define BUTTON2_PIN 7
-#define BUTTON3_PIN 8
-#define NUM_LEDS 9
+#define LED_PIN 18       
+#define BUTTON1_PIN 20
+#define BUTTON2_PIN 19
+#define BUTTON3_PIN 17
+#define NUM_LEDS 16
 
 Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 DFRobotDFPlayerMini dfPlayer;
@@ -17,28 +17,33 @@ bool programActive[3] = {false, false, false};
 bool program3Running = false;
 
 
-
+// Setup
 void setup() {
   Serial.begin(115200);
   strip.begin();
-  strip.clear();
-  strip.show();                               //Alle LED´s ausschalten
+  strip.fill(strip.Color(5, 0, 0));
+  strip.show();
+  delay(500);
   pinMode(BUTTON1_PIN, INPUT_PULLUP);
   pinMode(BUTTON2_PIN, INPUT_PULLUP);
   pinMode(BUTTON3_PIN, INPUT_PULLUP);
-  Serial1.begin(9600, SERIAL_8N1, 9, 10);     // RX=9, TX=10
+  Serial1.begin(9600, SERIAL_8N1, 22, 23);     // RX=22, TX=23
   if (!dfPlayer.begin(Serial1)) {
-    Serial.println("DFPlayer initialization failed!");
+    Serial.println("DFPlayer initialisierung fehlgeschlagen");
     while (true);
   }
-  dfPlayer.volume(15);                        // Lautstärke (0 to 30)
-
-  Serial.println("Setup completed!");
+  delay(3000);
+  dfPlayer.volume(20);
+  Serial.println("Fertig geladen");
+  delay(200);
+  strip.fill(strip.Color(20, 0, 0));
+  strip.show(); 
 }
 
+// Hauptprogramm
 void loop() {
   if (digitalRead(BUTTON1_PIN) == LOW) {
-    runProgram1();
+    toggleProgram1();
   } else if (digitalRead(BUTTON2_PIN) == LOW) {
     runProgram2();
   } else if (digitalRead(BUTTON3_PIN) == LOW) {
@@ -49,89 +54,91 @@ void loop() {
   }
 }
 
-
-// Startprogramm
-void runProgram1() {
+// Unterprogramm 1 - "Ein / Ausschalten des Monstersensors"
+void toggleProgram1() {
   if (!programActive[0]) {
     programActive[0] = true;
-    strip.fill(strip.Color(255, 255, 255));
+    strip.fill(strip.Color(0, 30, 0));
     strip.show();
     delay(2000);
-    strip.fill(strip.Color(255, 165, 0));
+    dfPlayer.play(1);
+    strip.fill(strip.Color(0, 0, 40));
     strip.show();
     delay(2000);
-    strip.fill(strip.Color(0, 255, 0));
+  } else {
+    strip.clear();
     strip.show();
-    delay(2000);
-    dfPlayer.play(1);                       // Erste MP3 abspielen (Monstersensor gestartet)
-    strip.fill(strip.Color(0, 0, 255));
-    strip.show();
-    delay(1000);                            // Debounce
     programActive[0] = false;
   }
+  delay(1000);
 }
 
 
-// Aktiver Monster Scan
+// Ein Monsterscan wird "aktiv" durchgeführt
 void runProgram2() {
   if (!programActive[1]) {
     programActive[1] = true;
-    dfPlayer.playMp3Folder(2);          // Zweite MP3 abspielen (Monstersensor gestartet)
-      delay(500);
-    for (int i = 0; i < 10; i++) {
-      strip.fill(strip.Color(random(0, 255), random(0, 255), random(0, 255)));
-      strip.show();
-      delay(200);
-    }
-    for (int i = 0; i < 5; i++) {
-      dfPlayer.playMp3Folder(2);          // Zweite MP3 abspielen (Monstersensor gestartet)
-      delay(500);
-
-      //MONSTER SCAN MP3
-    }
-    dfPlayer.play(3);                     // Dritte MP3 abspielen (Keine Monster gefunden)
-    strip.fill(strip.Color(0, 0, 255));
+    strip.fill(strip.Color(128, 128, 128));
     strip.show();
-    delay(1000);                          // Debounce
+    dfPlayer.play(2);
+    delay(3000);
+    dfPlayer.play(6);
+    unsigned long startTime = millis();
+    while (millis() - startTime < 40000) {
+      for (int pos = 0; pos < NUM_LEDS; pos++) {
+        for (int i = 0; i < NUM_LEDS; i++) {
+          int distance = (i - pos + NUM_LEDS) % NUM_LEDS;
+          int brightness = max(128 - (distance * 21), 0);
+          strip.setPixelColor(i, strip.Color(0, 0, brightness));
+        }
+        strip.show();
+        delay(100);
+      }
+    }
+    dfPlayer.play(2);
+    delay(2000); 
+    strip.fill(strip.Color(32, 20, 0));
+    strip.show();
+    delay(1000);
     programActive[1] = false;
   }
 }
 
 
-//Passiver Monster Scan mit Nachtlicht
 
+
+// "Aktiver" Monsterschutz
 void toggleProgram3() {
   program3Running = !program3Running;
 
   if (!program3Running) {
-    strip.fill(strip.Color(0, 0, 255));
+    strip.fill(strip.Color(0, 60, 0));
     strip.show();
   } else {
-    strip.fill(strip.Color(255, 255, 255));
-    strip.show();
-    dfPlayer.play(4);                      //Vierte MP3 abspielen (Monsterscanner gestartet)
-    delay(500);
-    strip.fill(strip.Color(255, 165, 0));
-    strip.show();
-    delay(5000);
-    strip.fill(strip.Color(0, 255, 0));
-    strip.show();
-    delay(500);
-    strip.fill(strip.Color(0, 0, 255));
-    strip.show();
-    dfPlayer.play(5);                     //Fünfte MP3 abspielen (Monsterscanner gestartet)
-    delay(2000);
+    delay(100);
+    dfPlayer.play(4);
+    delay(3000);
+    dfPlayer.play(5);
   }
 
-  delay(500); // Debounce
+  delay(500);
 }
 
 void runProgram3() {
-  // Pulsing light effect
-  static int j = 0; // Static variable to keep track of the pulsing state
-  int brightness = (sin(j * 0.1) * 127) + 128; // Sinusoidal pulsing
-  strip.fill(strip.Color(brightness, 0, brightness));
+  static int j = 0;
+  static int hue = 0;
+
+  int brightness = (sin(j * 0.1) * 127) + 128;
+  uint32_t color = strip.ColorHSV(hue, 255, brightness);
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    strip.setPixelColor(i, color);
+  }
   strip.show();
+  hue += 256;
+  if (hue > 65535) hue = 0;
   delay(100);
   j++;
 }
+
+
