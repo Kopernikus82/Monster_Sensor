@@ -62,4 +62,3 @@ The player and the LEDs are connected to the 5V pin.
 
 Have fun with it :-)
 
-Translated with DeepL.com (free version)
