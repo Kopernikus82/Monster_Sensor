@@ -20,11 +20,11 @@ Bauteile:
 - DFplayer mini + SD Karte + MP3 files
 - Lautsprecher
 - NeopixelLED-Ring oder vergleichbar
-- 3 Knöpfe
+- 3 Taster
 
 
 Der Lautsprecher wird am DFPlayer angeschlossen und jetzt Achtung! von den TX/RX Pins am ESP müssen die Kabel verdreht am DFPLayer angeschlossen werden. Also RX an TX usw.
-Die Taster werden am PIN und GND angeschlossen
+Die Taster werden am jeweiligen PIN und GND angeschlossen
 Der Player als auch die LEDs kommen an den 5V pin. 
 
 Viel Spaß damit :-)
@@ -53,7 +53,7 @@ Components:
 - DFplayer mini + SD card + MP3 files
 - Loudspeaker
 - Neopixel LED ring or similar
-- 3 buttons
+- 3 momentary push-buttons
 
 
 The loudspeaker is connected to the DFPlayer and now attention! the cables from the TX/RX pins on the ESP must be connected to the DFPLayer in reverse order. So RX to TX etc.
